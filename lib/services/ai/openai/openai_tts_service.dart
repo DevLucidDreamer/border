@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/app_config.dart';
+import '../../../core/platform_media.dart';
 import '../pipeline_stages.dart';
 
 /// OpenAI `gpt-4o-mini-tts`로 정리된 쉬운 글을 자연스러운 음성으로 읽어준다.
@@ -24,7 +27,8 @@ class OpenAiTtsService implements AudioSummarizer {
   final String voice;
   final http.Client _http;
 
-  static const _endpoint = 'https://api.openai.com/v1/audio/speech';
+  // 웹은 프록시(/api/openai), 네이티브는 실제 도메인.
+  static String get _endpoint => '${AppConfig.openaiBase}/v1/audio/speech';
 
   /// TTS 입력 글자 수 상한(초과 시 잘라서 요청).
   static const _maxChars = 4096;
@@ -62,7 +66,10 @@ class OpenAiTtsService implements AudioSummarizer {
       throw Exception('TTS API 오류 ${res.statusCode}: ${res.body}');
     }
 
-    // 응답 본문은 mp3 바이트. 로컬에 저장하고 경로를 돌려준다.
+    // 웹은 파일 시스템이 없으므로 data URL로 돌려준다(재생 시 <audio> src).
+    if (kIsWeb) return toDataUrl(res.bodyBytes, 'audio/mpeg');
+
+    // 네이티브: 응답 본문(mp3 바이트)을 로컬에 저장하고 경로를 돌려준다.
     final dir = await getApplicationDocumentsDirectory();
     final audioDir = Directory('${dir.path}/audio');
     if (!await audioDir.exists()) {

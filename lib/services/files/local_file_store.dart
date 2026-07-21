@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 
 /// 원본 소스 파일(녹음·업로드 음성·PDF)을 기기 내부에 보관한다.
@@ -30,6 +31,7 @@ class LocalFileStore {
 
   /// 저장된 모든 파일(원본 소스 · 생성한 음성)을 삭제한다(데이터 초기화 시).
   Future<void> wipe() async {
+    if (kIsWeb) return; // 웹은 파일 시스템을 쓰지 않는다(미디어는 data URL).
     final base = await getApplicationDocumentsDirectory();
     for (final name in ['sources', 'audio']) {
       final dir = Directory('${base.path}/$name');
@@ -39,7 +41,7 @@ class LocalFileStore {
 
   /// 저장된 소스 파일을 삭제한다(강의 삭제 시).
   Future<void> deleteFile(String? path) async {
-    if (path == null) return;
+    if (path == null || kIsWeb) return;
     final file = File(path);
     if (await file.exists()) {
       await file.delete();

@@ -43,6 +43,9 @@ dependencies:
   hive_flutter: ^1.1.0
   path_provider: ^2.1.4
 
+  # 로컬 저장소(Hive) AES 암호화 키를 iOS Keychain / Android Keystore에 보관
+  flutter_secure_storage: ^9.2.2
+
   # Audio recording (녹음 시작) & playback (오디오 요약 재생)
   record: ^6.2.1
   audioplayers: ^6.1.0

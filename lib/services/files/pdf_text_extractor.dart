@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
@@ -17,9 +18,12 @@ class PdfContentExtractor {
   /// OCR 폴백용 Claude 클라이언트(없으면 텍스트 레이어만 사용).
   final ClaudeClient? claude;
 
-  /// [path]의 PDF 전체 텍스트를 추출한다. 빈 문자열이면 추출 실패로 본다.
-  Future<String> extract(String path) async {
-    final bytes = await File(path).readAsBytes();
+  /// [path]의 PDF 전체 텍스트를 추출한다(네이티브). 빈 문자열이면 실패로 본다.
+  Future<String> extract(String path) async =>
+      extractBytes(await File(path).readAsBytes());
+
+  /// PDF 바이트에서 텍스트를 추출한다(웹은 파일 경로가 없어 이걸 쓴다).
+  Future<String> extractBytes(Uint8List bytes) async {
     final document = PdfDocument(inputBytes: bytes);
     String text;
     try {

@@ -1,12 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import '../../models/class_session.dart';
 import '../ai/claude/claude_client.dart';
 
 /// 시간표 사진에서 수업(요일·시간·강의명)을 읽어 낸다.
 abstract class TimetableOcr {
+  /// 네이티브: 파일 경로로 읽는다.
   Future<List<ClassSession>> extract(String imagePath);
+
+  /// 웹: 파일 경로가 없어 바이트로 읽는다([mediaType]은 image/png 등).
+  Future<List<ClassSession>> extractBytes(Uint8List bytes, String mediaType);
 }
 
 /// Claude 비전으로 시간표를 읽는 실제 구현.
@@ -16,12 +21,16 @@ class ClaudeTimetableOcr implements TimetableOcr {
   final ClaudeClient _client;
 
   @override
-  Future<List<ClassSession>> extract(String imagePath) async {
-    final bytes = await File(imagePath).readAsBytes();
+  Future<List<ClassSession>> extract(String imagePath) async =>
+      extractBytes(await File(imagePath).readAsBytes(), _mediaType(imagePath));
+
+  @override
+  Future<List<ClassSession>> extractBytes(
+      Uint8List bytes, String mediaType) async {
     final text = await _client.completeVision(
       system: '너는 시간표 이미지를 정확히 읽어 구조화하는 도우미야.',
       maxTokens: 2048,
-      mediaType: _mediaType(imagePath),
+      mediaType: mediaType,
       imageBytes: bytes,
       userPrompt: '''
 이 시간표 사진에서 모든 수업을 읽어줘. 각 수업마다 요일, 시작시간, 종료시간, 강의명을 뽑아.
@@ -50,7 +59,13 @@ class ClaudeTimetableOcr implements TimetableOcr {
 /// 키 없이 흐름을 시연하기 위한 목 구현.
 class MockTimetableOcr implements TimetableOcr {
   @override
-  Future<List<ClassSession>> extract(String imagePath) async {
+  Future<List<ClassSession>> extract(String imagePath) => _sample();
+
+  @override
+  Future<List<ClassSession>> extractBytes(Uint8List bytes, String mediaType) =>
+      _sample();
+
+  Future<List<ClassSession>> _sample() async {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     return const [
       ClassSession(

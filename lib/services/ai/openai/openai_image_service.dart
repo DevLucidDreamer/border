@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/app_config.dart';
 import '../pipeline_stages.dart';
 
 /// OpenAI 이미지 생성(`/v1/images/generations`)으로 키워드를 나타내는
@@ -27,7 +29,8 @@ class OpenAiImageService implements ImageGenerator {
   final String quality;
   final http.Client _http;
 
-  static const _endpoint = 'https://api.openai.com/v1/images/generations';
+  // 웹은 프록시(/api/openai), 네이티브는 실제 도메인.
+  static String get _endpoint => '${AppConfig.openaiBase}/v1/images/generations';
 
   @override
   Future<String?> illustrate(
@@ -63,6 +66,9 @@ class OpenAiImageService implements ImageGenerator {
     final body = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
     final b64 = (body['data'] as List).first['b64_json'] as String?;
     if (b64 == null) return null;
+
+    // 웹은 파일 시스템이 없으므로 data URL로 돌려준다(Image.memory로 표시).
+    if (kIsWeb) return 'data:image/png;base64,$b64';
 
     final dir = await getApplicationDocumentsDirectory();
     final imgDir = Directory('${dir.path}/images');

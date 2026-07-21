@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/learn_controller.dart';
+import '../core/platform_media.dart';
 import '../core/service_locator.dart';
 import '../models/keyword_card.dart';
 import '../models/quiz.dart';
@@ -181,10 +180,10 @@ class _CardPagerState extends State<_CardPager> {
 
   Future<void> _playAudio() async {
     final path = widget.unit.audioPath;
-    if (path == null || !File(path).existsSync()) return;
+    if (!mediaExists(path)) return;
     _player ??= AudioPlayer();
     await _player!.stop();
-    await _player!.play(DeviceFileSource(path));
+    await _player!.play(audioSource(path!));
   }
 
   @override
@@ -320,7 +319,7 @@ class _Illustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final path = card.imagePath;
-    final hasImage = path != null && File(path).existsSync();
+    final hasImage = mediaExists(path);
     return Container(
       height: 200,
       width: double.infinity,
@@ -333,7 +332,7 @@ class _Illustration extends StatelessWidget {
         children: [
           Positioned.fill(
             child: hasImage
-                ? Image.file(File(path), fit: BoxFit.contain)
+                ? mediaImage(path!, fit: BoxFit.contain)
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

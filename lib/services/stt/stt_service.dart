@@ -4,10 +4,13 @@
 /// 되고, 파이프라인 나머지는 바뀌지 않는다. 지금은 [MockSttService]로
 /// API 키 없이 전체 흐름을 검증한다.
 abstract class SttService {
-  /// [audioFilePath]의 음성을 텍스트로 변환한다.
+  /// 음성을 텍스트로 변환한다.
   ///
-  /// 경로가 null이면(녹음 실패 등) 데모용 샘플 텍스트를 반환할 수 있다.
-  Future<String> transcribe(String? audioFilePath);
+  /// 네이티브는 [audioFilePath](파일 경로)를 준다. 웹은 파일 경로가 없으므로
+  /// [bytes]로 직접 넘긴다([filename]은 형식 판별용, 예: audio.webm).
+  /// 둘 다 없으면(녹음 실패 등) 데모용 샘플 텍스트를 반환할 수 있다.
+  Future<String> transcribe(String? audioFilePath,
+      {List<int>? bytes, String filename = 'audio.m4a'});
 }
 
 /// 실제 STT가 실패(크레딧 소진·네트워크 등)하면 [_fallback]으로 대체한다.
@@ -21,13 +24,15 @@ class FallbackSttService implements SttService {
   final SttService _fallback;
 
   @override
-  Future<String> transcribe(String? audioFilePath) async {
+  Future<String> transcribe(String? audioFilePath,
+      {List<int>? bytes, String filename = 'audio.m4a'}) async {
     try {
-      return await _primary.transcribe(audioFilePath);
+      return await _primary.transcribe(audioFilePath,
+          bytes: bytes, filename: filename);
     } catch (e) {
       // ignore: avoid_print
       print('STT 실패 → 목 샘플로 대체: $e');
-      return _fallback.transcribe(audioFilePath);
+      return _fallback.transcribe(audioFilePath, bytes: bytes, filename: filename);
     }
   }
 }

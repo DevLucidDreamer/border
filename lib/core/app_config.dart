@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// 앱 실행 시점의 외부 API 설정.
@@ -63,10 +64,24 @@ class AppConfig {
   static String get clovaSpeaker =>
       _pick(_defineClovaSpeaker, 'CLOVA_SPEAKER', fallback: 'nara');
 
-  // ---- 활성화 여부 ----
+  // ---- API 베이스 URL ----
+  //
+  // 웹은 키를 브라우저에 두지 않고 같은 오리진의 프록시(Cloudflare Pages
+  // Functions)로 호출한다. 프록시가 서버 측 시크릿으로 키를 주입하므로
+  // CORS·키 노출이 없다. 네이티브(아이패드)는 지금처럼 직접 호출한다.
 
-  static bool get hasClaude => anthropicApiKey.isNotEmpty;
-  static bool get hasOpenai => openaiApiKey.isNotEmpty;
+  static String get anthropicBase =>
+      kIsWeb ? '/api/anthropic' : 'https://api.anthropic.com';
+  static String get openaiBase =>
+      kIsWeb ? '/api/openai' : 'https://api.openai.com';
+
+  // ---- 활성화 여부 ----
+  //
+  // 웹에선 키가 프록시(서버)에 있으므로 클라이언트에 키가 없어도 실서비스로
+  // 동작한다고 본다. 네이티브는 키 유무로 실서비스/Mock을 가른다.
+
+  static bool get hasClaude => kIsWeb || anthropicApiKey.isNotEmpty;
+  static bool get hasOpenai => kIsWeb || openaiApiKey.isNotEmpty;
   static bool get hasClova =>
       clovaClientId.isNotEmpty && clovaClientSecret.isNotEmpty;
 }

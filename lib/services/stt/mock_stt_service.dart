@@ -6,7 +6,8 @@ import 'stt_service.dart';
 /// AI 오케스트레이터가 쉬운 글로 재구성하며, 학습자에게 직접 노출되지 않는다.
 class MockSttService implements SttService {
   @override
-  Future<String> transcribe(String? audioFilePath) async {
+  Future<String> transcribe(String? audioFilePath,
+      {List<int>? bytes, String filename = 'audio.m4a'}) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     return _sampleLecture;
   }

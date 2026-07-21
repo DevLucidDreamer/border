@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/recording_controller.dart';
 import '../core/service_locator.dart';
 import '../models/enums.dart';
+import '../services/files/file_picker_service.dart';
 import 'splash_screen.dart';
 
 // ---- 메인화면과 통일한 글씨·색 ----
@@ -58,12 +59,12 @@ class RecordingScreen extends StatelessWidget {
       RecordingScreen(title: '녹음', onStart: (c) => c.startRecording());
 
   /// 업로드된 음성 파일을 처리하는 화면.
-  static RecordingScreen audioFile(String path) => RecordingScreen(
-      title: '음성 파일', onStart: (c) => c.ingestAudioFile(path));
+  static RecordingScreen audioFile(PickedFile picked) => RecordingScreen(
+      title: '음성 파일', onStart: (c) => c.ingestAudioFile(picked));
 
   /// 업로드된 PDF를 처리하는 화면.
-  static RecordingScreen pdfFile(String path) =>
-      RecordingScreen(title: 'PDF', onStart: (c) => c.ingestPdfFile(path));
+  static RecordingScreen pdfFile(PickedFile picked) =>
+      RecordingScreen(title: 'PDF', onStart: (c) => c.ingestPdfFile(picked));
 
   @override
   Widget build(BuildContext context) {

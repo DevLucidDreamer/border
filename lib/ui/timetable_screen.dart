@@ -1,8 +1,18 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../core/service_locator.dart';
 import 'home_screen.dart';
 import 'timetable_confirm_screen.dart';
+
+/// 파일명 확장자로 이미지 MIME 타입을 고른다(웹 OCR 입력용).
+String _mediaType(String name) {
+  final n = name.toLowerCase();
+  if (n.endsWith('.png')) return 'image/png';
+  if (n.endsWith('.webp')) return 'image/webp';
+  if (n.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
+}
 
 /// 시간표 사진을 올려 OCR로 수업(요일·시간·강의명)을 읽는 화면.
 /// 스플래시 다음에 나오며, 업로드하거나 건너뛰면 홈으로 넘어간다.
@@ -30,7 +40,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
     setState(() => _busy = true);
     try {
-      final sessions = await s.timetableOcr.extract(picked.path);
+      // 웹은 파일 경로가 없어 바이트로, 네이티브는 경로로 읽는다.
+      final sessions = kIsWeb
+          ? await s.timetableOcr.extractBytes(picked.bytes!, _mediaType(picked.name))
+          : await s.timetableOcr.extract(picked.path!);
       if (!mounted) return;
       setState(() => _busy = false);
       // 저장은 확인 화면에서 "맞아요"를 누를 때 한다.

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/app_config.dart';
+
 /// Anthropic Messages API(`POST /v1/messages`)를 감싼 얇은 클라이언트.
 ///
 /// Dart에는 공식 Anthropic SDK가 없어 raw HTTP로 호출한다. 각 AI 단계
@@ -18,7 +20,8 @@ class ClaudeClient {
   final String model;
   final http.Client _http;
 
-  static const _endpoint = 'https://api.anthropic.com/v1/messages';
+  // 웹에선 '/api/anthropic/v1/messages'(프록시), 네이티브에선 실제 도메인.
+  String get _endpoint => '${AppConfig.anthropicBase}/v1/messages';
   static const _version = '2023-06-01';
 
   /// system + user 프롬프트로 한 번의 completion을 받아 본문 텍스트를 돌려준다.

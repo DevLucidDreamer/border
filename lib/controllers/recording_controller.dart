@@ -10,6 +10,7 @@ import '../models/lecture.dart';
 import '../services/ai/ai_orchestrator.dart';
 import '../services/ai/subject_classifier.dart';
 import '../services/audio/audio_recorder.dart';
+import '../services/files/file_picker_service.dart';
 import '../services/files/local_file_store.dart';
 import '../services/files/pdf_text_extractor.dart';
 import '../services/stt/stt_service.dart';
@@ -91,11 +92,25 @@ class RecordingController extends ChangeNotifier {
     if (id == null) return;
 
     await _guard(id, () async {
-      final recordedPath = await recorder.stop();
+      final locator = await recorder.stop(); // 네이티브 경로 / 웹 blob URL
+
+      if (kIsWeb) {
+        // 웹은 파일로 저장하지 않고 blob 바이트를 STT로 바로 넘긴다.
+        final bytes = locator == null ? null : await recorder.webBytes(locator);
+        final lecture = lectureRepo.getLecture(id)!.copyWith(
+              status: LectureStatus.transcribing,
+            );
+        await lectureRepo.saveLecture(lecture);
+        _setStatus(LectureStatus.transcribing);
+        final transcript =
+            await stt.transcribe(null, bytes: bytes, filename: 'audio.webm');
+        await _runPipeline(lecture, transcript);
+        return;
+      }
+
       // 녹음본을 로컬에 보관한다.
-      final savedPath = recordedPath == null
-          ? null
-          : await fileStore.importFile(recordedPath, id);
+      final savedPath =
+          locator == null ? null : await fileStore.importFile(locator, id);
 
       var lecture = lectureRepo.getLecture(id)!.copyWith(
             sourceFilePath: savedPath,
@@ -105,14 +120,14 @@ class RecordingController extends ChangeNotifier {
       await lectureRepo.saveLecture(lecture);
       _setStatus(LectureStatus.transcribing);
 
-      final transcript = await stt.transcribe(savedPath ?? recordedPath);
+      final transcript = await stt.transcribe(savedPath ?? locator);
       await _runPipeline(lecture, transcript);
     });
   }
 
   // ---- 입력 경로 ② 음성 파일 업로드 ----
 
-  Future<void> ingestAudioFile(String pickedPath) async {
+  Future<void> ingestAudioFile(PickedFile picked) async {
     final id = _uuid.v4();
     _currentLectureId = id;
     _error = null;
@@ -126,7 +141,16 @@ class RecordingController extends ChangeNotifier {
     _setStatus(LectureStatus.transcribing);
 
     await _guard(id, () async {
-      final savedPath = await fileStore.importFile(pickedPath, id);
+      if (kIsWeb) {
+        // 웹: 파일 저장 없이 바이트를 STT로 바로 넘긴다.
+        final lecture = lectureRepo.getLecture(id)!;
+        final transcript = await stt.transcribe(null,
+            bytes: picked.bytes, filename: picked.name);
+        await _runPipeline(lecture, transcript);
+        return;
+      }
+
+      final savedPath = await fileStore.importFile(picked.path!, id);
       final lecture = lectureRepo.getLecture(id)!.copyWith(
             sourceFilePath: savedPath,
             audioFilePath: savedPath,
@@ -140,7 +164,7 @@ class RecordingController extends ChangeNotifier {
 
   // ---- 입력 경로 ③ PDF 업로드 ----
 
-  Future<void> ingestPdfFile(String pickedPath) async {
+  Future<void> ingestPdfFile(PickedFile picked) async {
     final id = _uuid.v4();
     _currentLectureId = id;
     _error = null;
@@ -154,14 +178,19 @@ class RecordingController extends ChangeNotifier {
     _setStatus(LectureStatus.transcribing);
 
     await _guard(id, () async {
-      final savedPath = await fileStore.importFile(pickedPath, id);
-      final lecture = lectureRepo.getLecture(id)!.copyWith(
-            sourceFilePath: savedPath,
-          );
-      await lectureRepo.saveLecture(lecture);
-
       // PDF는 STT 없이 텍스트를 바로 추출한다.
-      final text = await pdfExtractor.extract(savedPath);
+      // 웹: 파일 저장 없이 바이트에서, 네이티브: 저장 후 파일 경로에서.
+      final String text;
+      final Lecture lecture;
+      if (kIsWeb) {
+        lecture = lectureRepo.getLecture(id)!;
+        text = await pdfExtractor.extractBytes(picked.bytes!);
+      } else {
+        final savedPath = await fileStore.importFile(picked.path!, id);
+        lecture = lectureRepo.getLecture(id)!.copyWith(sourceFilePath: savedPath);
+        await lectureRepo.saveLecture(lecture);
+        text = await pdfExtractor.extract(savedPath);
+      }
       if (text.isEmpty) {
         throw Exception('PDF에서 글자를 읽지 못했어요.');
       }

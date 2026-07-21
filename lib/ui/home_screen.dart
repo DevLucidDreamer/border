@@ -74,8 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (picked == null || !mounted) return;
 
     await _go(kind == PickKind.audio
-        ? RecordingScreen.audioFile(picked.path)
-        : RecordingScreen.pdfFile(picked.path));
+        ? RecordingScreen.audioFile(picked)
+        : RecordingScreen.pdfFile(picked));
   }
 
   /// 시간표 수정: 시간표 화면으로 이동(새로 찍거나 편집 후 저장).

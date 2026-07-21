@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/platform_media.dart';
+
 /// 로컬 오디오 파일(정리 요약 음성)을 재생/정지하는 큰 버튼.
 ///
 /// 긴 글을 읽기 어려운 학습자를 위해 "들어보기"를 크게 제공한다.
@@ -35,7 +37,7 @@ class _PlayAudioButtonState extends State<PlayAudioButton> {
       await _player.stop();
       if (mounted) setState(() => _playing = false);
     } else {
-      await _player.play(DeviceFileSource(widget.filePath));
+      await _player.play(audioSource(widget.filePath));
       if (mounted) setState(() => _playing = true);
     }
   }
