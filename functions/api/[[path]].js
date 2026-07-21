@@ -41,18 +41,22 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const target = `${base}/${parts.slice(1).join('/')}${url.search}`;
 
-  // 클라이언트 헤더를 복사하되 host를 지우고 서버 키를 주입한다.
-  // content-type(멀티파트 boundary 포함)은 그대로 보존해야 STT가 동작한다.
-  const headers = new Headers(request.headers);
-  headers.delete('host');
+  // 최소 헤더만 새로 구성한다. 브라우저 헤더(content-length, accept-encoding,
+  // cf-*, origin 등)를 통째로 복사하면 업스트림/스트리밍 충돌로 502가 난다.
+  // content-type만 보존(멀티파트 boundary 포함해야 STT가 동작)하고 키를 주입한다.
+  const headers = new Headers();
+  const contentType = request.headers.get('content-type');
+  if (contentType) headers.set('content-type', contentType);
+
   if (provider === 'anthropic') {
     if (!env.ANTHROPIC_API_KEY) {
       return new Response('ANTHROPIC_API_KEY not set on Cloudflare', { status: 500 });
     }
     headers.set('x-api-key', env.ANTHROPIC_API_KEY);
-    if (!headers.has('anthropic-version')) {
-      headers.set('anthropic-version', '2023-06-01');
-    }
+    headers.set(
+      'anthropic-version',
+      request.headers.get('anthropic-version') || '2023-06-01',
+    );
   } else {
     if (!env.OPENAI_API_KEY) {
       return new Response('OPENAI_API_KEY not set on Cloudflare', { status: 500 });
@@ -61,22 +65,26 @@ export async function onRequest(context) {
   }
 
   const method = request.method;
-  const init = {
-    method,
-    headers,
-    body: method === 'GET' || method === 'HEAD' ? undefined : request.body,
-  };
-  if (init.body) init.duplex = 'half'; // 스트리밍 본문(멀티파트) 전송에 필요
+  // 본문을 스트리밍(duplex) 대신 통째로 읽어 넘긴다 — Pages Functions에서
+  // 스트리밍 본문이 자주 502를 유발한다. 데모 크기(텍스트·오디오·PDF)라 무리 없음.
+  let body;
+  if (method !== 'GET' && method !== 'HEAD') {
+    body = await request.arrayBuffer();
+  }
 
-  const upstream = await fetch(target, init);
+  let upstream;
+  try {
+    upstream = await fetch(target, { method, headers, body });
+  } catch (e) {
+    // 업스트림 연결 실패 시 CF의 불투명한 502 대신 원인을 돌려준다.
+    return new Response(`Proxy upstream fetch failed: ${e}`, { status: 502 });
+  }
 
-  // 응답을 그대로 흘려보낸다. resp.body는 이미 디코딩된 스트림이므로
-  // content-encoding/length 헤더는 제거해야 브라우저가 중복 해제하지 않는다.
-  const respHeaders = new Headers(upstream.headers);
-  respHeaders.delete('content-encoding');
-  respHeaders.delete('content-length');
-  return new Response(upstream.body, {
-    status: upstream.status,
-    headers: respHeaders,
-  });
+  // 응답 본문을 읽어 그대로 돌려준다. content-encoding/length는 이미 디코딩된
+  // 본문과 충돌하므로 제거한다.
+  const respBody = await upstream.arrayBuffer();
+  const respHeaders = new Headers();
+  const respCt = upstream.headers.get('content-type');
+  if (respCt) respHeaders.set('content-type', respCt);
+  return new Response(respBody, { status: upstream.status, headers: respHeaders });
 }
