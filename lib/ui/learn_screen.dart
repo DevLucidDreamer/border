@@ -333,7 +333,7 @@ class _Illustration extends StatelessWidget {
         children: [
           Positioned.fill(
             child: hasImage
-                ? Image.file(File(path), fit: BoxFit.cover)
+                ? Image.file(File(path), fit: BoxFit.contain)
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -609,65 +609,30 @@ class _Done extends StatelessWidget {
   }
 }
 
-/// 학습·복습할 게 없을 때: 배운 단원을 다시 볼 수 있는 목록.
+/// 오늘 복습·학습할 게 없을 때의 안내(단원 목록은 노출하지 않는다 —
+/// 복습 주기는 AI가 자동으로 관리하므로 사용자가 목록을 뒤질 필요가 없다).
 class _Notes extends StatelessWidget {
   const _Notes();
 
   @override
   Widget build(BuildContext context) {
-    final units = Services.instance.unitRepository.all();
-    if (units.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.spa, size: 96, color: _midTeal),
-            SizedBox(height: 24),
-            Text('아직 학습할 내용이 없어요.', style: TextStyle(fontSize: 26)),
-            SizedBox(height: 12),
-            Text('먼저 강의를 녹음해 보세요.', style: TextStyle(fontSize: 20)),
-          ],
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.all(20),
+    final hasUnits = Services.instance.unitRepository.all().isNotEmpty;
+    return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: _teal),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              const Text('배운 내용 다시 보기',
-                  style: TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w800, color: _teal)),
-            ],
-          ),
+          const Icon(Icons.spa, size: 96, color: _midTeal),
+          const SizedBox(height: 24),
+          Text(hasUnits ? '오늘 복습·학습을 마쳤어요!' : '아직 학습할 내용이 없어요.',
+              style: const TextStyle(fontSize: 26)),
           const SizedBox(height: 12),
-          Expanded(
-            child: ListView.separated(
-              itemCount: units.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (_, i) {
-                final u = units[i];
-                final title =
-                    u.subjectName.isNotEmpty ? u.subjectName : '단원 ${u.unitNo}';
-                return Card(
-                  child: ExpansionTile(
-                    title: Text('$title (${u.unitNo}단원)',
-                        style: const TextStyle(fontSize: 20)),
-                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    children: [
-                      Text(u.content,
-                          style: const TextStyle(fontSize: 18, height: 1.5)),
-                    ],
-                  ),
-                );
-              },
-            ),
+          Text(hasUnits ? '내일 또 만나요.' : '먼저 강의를 녹음해 보세요.',
+              style: const TextStyle(fontSize: 20)),
+          const SizedBox(height: 40),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: _teal),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인', style: TextStyle(fontSize: 22)),
           ),
         ],
       ),
