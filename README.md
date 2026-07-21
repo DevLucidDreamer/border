@@ -19,7 +19,6 @@
 6. [보안 및 안전성 (심사: 보안·안전성)](#6-보안-및-안전성-심사-보안안전성)
 7. [시장성 및 사업화 가능성 (심사: 시장성·사업화)](#7-시장성-및-사업화-가능성-심사-시장성사업화)
 8. [실행 및 배포 방법](#8-실행-및-배포-방법)
-9. [로드맵](#9-로드맵)
 
 ---
 
@@ -271,14 +270,6 @@ Cloudflare Pages 설정:
 | `OPENAI_API_KEY` | Whisper(STT)·TTS·이미지 | 없으면 Mock |
 | `CLAUDE_MODEL` / `STT_MODEL` / `TTS_MODEL` / `TTS_VOICE` / `IMAGE_MODEL` | 모델 선택 | 코드 내 기본값 |
 | `CLOVA_CLIENT_ID` / `CLOVA_CLIENT_SECRET` | 폴백 TTS | 선택 |
-
----
-
-## 9. 로드맵
-- [ ] 웹 마이크 녹음 실기기 검증 (HTTPS·권한)
-- [ ] 프록시 인증·레이트리밋(Cloudflare Access / Rate Limiting)
-- [ ] 보호자·교사용 진도 리포트(로컬 우선 원칙 유지 하 선택적 공유)
-- [ ] 클라우드 백업 옵션(키 에스크로 기반, 옵트인)
 
 ---
 
