@@ -23,10 +23,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // ---- 팔레트 ----
-  static const _paper = Color(0xFFF7F6F2); // 따뜻한 종이빛 배경
-  static const _ink = Color(0xFF1A1815); // 잉크(제목·아이콘)
-  static const _muted = Color(0xFF8A8A8A); // 부제
-  static const _line = Color(0xFFE4E2DD); // 헤어라인 구분선
+  static const _paper = Colors.white; // 배경
+  static const _ink = SplashScreen.ink; // 항목 제목(딥 틸)
+  static const _disc = SplashScreen.disc; // 원형 아이콘 배경(뮤트 틸)
+  static const _muted = SplashScreen.muted; // 부제
+  static const _line = SplashScreen.line; // 헤어라인 구분선
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -152,56 +153,58 @@ class _HomeScreenState extends State<HomeScreen> {
       key: _scaffoldKey,
       backgroundColor: _paper,
       endDrawer: _buildDrawer(),
+      // 좌표는 docs/메인화면.png(가로 347)에서 그대로 잰 값이다.
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              // 오른쪽 위 서랍(≡) 버튼.
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: const Icon(Icons.menu, size: 30, color: _ink),
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                ),
+        child: Stack(
+          children: [
+            // 오른쪽 가장자리에서 얼굴만 빼꼼 내미는 마스코트.
+            const Positioned(top: 159, right: -35.5, child: MascotFace()),
+            // 오른쪽 위 서랍(≡) 버튼.
+            Positioned(
+              top: 0,
+              right: 4,
+              child: IconButton(
+                icon: const Icon(Icons.menu, size: 30, color: _ink),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'BORDER',
-                style: TextStyle(
-                  fontFamily: 'serif',
-                  fontSize: 42,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: _ink,
-                ),
-              ),
-              const Spacer(flex: 2),
-              _HomeItem(
+            ),
+            const Positioned(left: 15, top: 123, child: BorderWordmark()),
+            Positioned(
+              left: 15,
+              right: 0,
+              top: 281,
+              child: _HomeItem(
                 icon: Icons.menu_book_outlined,
                 title: '학습하기',
                 subtitle: sessions > 0
-                    ? '$sessions개의 세션이 남아있어요!'
+                    ? '$sessions개의 학습이 남아있어요!'
                     : '지금은 학습할 내용이 없어요',
                 onTap: () => _go(const LearnScreen()),
               ),
-              const _Divider(),
-              _HomeItem(
+            ),
+            const Positioned(left: 29, right: 21, top: 371, child: _Divider()),
+            Positioned(
+              left: 15,
+              right: 0,
+              top: 408,
+              child: _HomeItem(
                 icon: Icons.mic_none,
                 title: '녹음하기',
                 onTap: () => _go(RecordingScreen.record()),
               ),
-              const _Divider(),
-              _HomeItem(
+            ),
+            const Positioned(left: 29, right: 21, top: 489, child: _Divider()),
+            Positioned(
+              left: 15,
+              right: 0,
+              top: 524,
+              child: _HomeItem(
                 icon: Icons.description_outlined,
                 title: '자료 넣기',
                 onTap: _upload,
               ),
-              const Spacer(flex: 3),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -227,46 +230,47 @@ class _HomeItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        child: Row(
-          children: [
-            _IconDisc(icon: icon),
-            const SizedBox(width: 24),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
+      child: Row(
+        children: [
+          _IconDisc(icon: icon),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 29,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.2,
+                    height: 1.15,
+                    color: _HomeScreenState._ink,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    title,
+                    subtitle!,
                     style: const TextStyle(
-                      fontSize: 27,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: _HomeScreenState._ink,
+                      height: 1.2,
+                      color: _HomeScreenState._muted,
                     ),
                   ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle!,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: _HomeScreenState._muted,
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// 종이 위에 떠 있는 듯한 부드러운 흰색 원형 아이콘 디스크.
+/// 흰 아이콘이 들어간 틸 원형 디스크(목업 지름 67).
 class _IconDisc extends StatelessWidget {
   const _IconDisc({required this.icon});
 
@@ -275,20 +279,14 @@ class _IconDisc extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 92,
-      height: 92,
+      width: 67,
+      height: 67,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
-          // 아래로 퍼지는 부드러운 그림자
-          BoxShadow(color: Color(0x1A000000), blurRadius: 22, offset: Offset(0, 8)),
-          // 위쪽 옅은 글로우로 '떠 있는' 느낌
-          BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, -3)),
-        ],
+        color: _HomeScreenState._disc,
       ),
       alignment: Alignment.center,
-      child: Icon(icon, size: 42, color: _HomeScreenState._ink),
+      child: Icon(icon, size: 34, color: Colors.white),
     );
   }
 }
@@ -298,10 +296,6 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 1,
-      margin: const EdgeInsets.only(right: 12),
-      color: _HomeScreenState._line,
-    );
+    return Container(height: 2, color: _HomeScreenState._line);
   }
 }

@@ -56,14 +56,15 @@ class _TimetableScreenState extends State<TimetableScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 32),
+              const SizedBox(height: 56),
               const Text(
                 '시간표 사진을\n올려주세요.',
                 style: TextStyle(
-                  fontSize: 30,
-                  height: 1.35,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1815),
+                  fontSize: 28,
+                  height: 1.4,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  color: Color(0xFF5FA396), // 뮤트 틸
                 ),
               ),
               Expanded(
@@ -100,13 +101,13 @@ class _AddButton extends StatelessWidget {
       onTap: onTap,
       customBorder: const CircleBorder(),
       child: Container(
-        width: 132,
-        height: 132,
+        width: 96,
+        height: 96,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          color: Color(0xFFEDEDED),
+          color: Color(0xFFF2F2F2),
         ),
-        child: const Icon(Icons.add_rounded, size: 68, color: Color(0xFF9A9A9A)),
+        child: const Icon(Icons.add_rounded, size: 52, color: Color(0xFF9A9A9A)),
       ),
     );
   }

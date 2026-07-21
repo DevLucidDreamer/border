@@ -4,6 +4,45 @@ import 'package:provider/provider.dart';
 import '../controllers/recording_controller.dart';
 import '../core/service_locator.dart';
 import '../models/enums.dart';
+import 'splash_screen.dart';
+
+// ---- 메인화면과 통일한 글씨·색 ----
+const _titleStyle = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.3,
+    color: SplashScreen.ink);
+const _headlineStyle = TextStyle(
+    fontSize: 26,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.3,
+    color: SplashScreen.ink);
+const _subStyle = TextStyle(
+    fontSize: 16, fontWeight: FontWeight.w700, color: SplashScreen.muted);
+const _buttonTextStyle = TextStyle(
+    fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.3);
+
+/// 메인화면의 원형 아이콘과 같은 톤의 큰 디스크.
+class _Disc extends StatelessWidget {
+  const _Disc(this.icon);
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: const BoxDecoration(
+          shape: BoxShape.circle, color: SplashScreen.disc),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 60, color: Colors.white),
+    );
+  }
+}
+
+/// 화면 아래의 큰 확인/실행 버튼(브랜드 틸).
+ButtonStyle _filled() =>
+    FilledButton.styleFrom(backgroundColor: SplashScreen.disc);
 
 /// 입력 처리 화면. 녹음/음성 업로드/PDF 업로드 모두 이 화면을 재사용한다.
 /// 한 화면에서 입력 → 자동 정리 → 완료까지, 항상 하나의 과업만 보여준다.
@@ -58,7 +97,14 @@ class _RecordingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.watch<RecordingController>();
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 0,
+        foregroundColor: SplashScreen.ink,
+        title: Text(title, style: _titleStyle),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -96,17 +142,17 @@ class _Recording extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.mic, size: 96, color: Colors.red),
+        const _Disc(Icons.mic_none),
         const SizedBox(height: 24),
-        const Text('강의를 녹음하고 있어요.', style: TextStyle(fontSize: 24)),
+        const Text('강의를 녹음하고 있어요.', style: _headlineStyle),
         const SizedBox(height: 48),
         SizedBox(
           height: 120,
           width: double.infinity,
           child: FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: _filled(),
             onPressed: onStop,
-            child: const Text('녹음 끝내기', style: TextStyle(fontSize: 26)),
+            child: const Text('녹음 끝내기', style: _buttonTextStyle),
           ),
         ),
       ],
@@ -132,11 +178,15 @@ class _Processing extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const SizedBox(
-            width: 72, height: 72, child: CircularProgressIndicator()),
+          width: 72,
+          height: 72,
+          child: CircularProgressIndicator(
+              strokeWidth: 6, color: SplashScreen.disc),
+        ),
         const SizedBox(height: 32),
-        Text(_label, style: const TextStyle(fontSize: 24)),
+        Text(_label, style: _headlineStyle, textAlign: TextAlign.center),
         const SizedBox(height: 12),
-        const Text('잠깐만 기다려 주세요.', style: TextStyle(fontSize: 18)),
+        const Text('잠깐만 기다려 주세요.', style: _subStyle),
       ],
     );
   }
@@ -151,16 +201,17 @@ class _Done extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.check_circle, size: 96, color: Colors.green),
+        const _Disc(Icons.check_rounded),
         const SizedBox(height: 24),
-        const Text('정리가 끝났어요!', style: TextStyle(fontSize: 26)),
+        const Text('정리가 끝났어요!', style: _headlineStyle),
         const SizedBox(height: 48),
         SizedBox(
           height: 88,
           width: double.infinity,
           child: FilledButton(
+            style: _filled(),
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인', style: TextStyle(fontSize: 24)),
+            child: const Text('확인', style: _buttonTextStyle),
           ),
         ),
       ],
@@ -177,19 +228,19 @@ class _TooShort extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.hearing_disabled, size: 96, color: Colors.orange),
+        const _Disc(Icons.hearing_disabled),
         const SizedBox(height: 24),
-        const Text('녹음한 내용이 너무 짧아요.', style: TextStyle(fontSize: 24)),
+        const Text('녹음한 내용이 너무 짧아요.', style: _headlineStyle),
         const SizedBox(height: 8),
-        const Text('조금 더 길게 말한 뒤 다시 녹음해 주세요.',
-            style: TextStyle(fontSize: 18, color: Colors.grey)),
+        const Text('조금 더 길게 말한 뒤 다시 녹음해 주세요.', style: _subStyle),
         const SizedBox(height: 40),
         SizedBox(
           height: 88,
           width: double.infinity,
           child: FilledButton(
+            style: _filled(),
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('다시 녹음', style: TextStyle(fontSize: 24)),
+            child: const Text('다시 녹음', style: _buttonTextStyle),
           ),
         ),
       ],
@@ -206,19 +257,19 @@ class _Failed extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.error_outline, size: 72, color: Colors.orange),
-        const SizedBox(height: 16),
+        const _Disc(Icons.error_outline),
+        const SizedBox(height: 24),
         const Text('문제가 생겼어요. 다시 해볼까요?',
-            style: TextStyle(fontSize: 22)),
+            style: _headlineStyle, textAlign: TextAlign.center),
         if (message != null) ...[
           const SizedBox(height: 8),
-          Text(message!,
-              style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          Text(message!, style: _subStyle, textAlign: TextAlign.center),
         ],
         const SizedBox(height: 32),
         FilledButton(
+          style: _filled(),
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('돌아가기', style: TextStyle(fontSize: 22)),
+          child: const Text('돌아가기', style: _buttonTextStyle),
         ),
       ],
     );
