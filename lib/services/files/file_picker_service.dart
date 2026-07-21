@@ -41,8 +41,12 @@ class FilePickerService {
   PickedFile? _toPicked(FilePickerResult? result) {
     final file = result?.files.single;
     if (file == null) return null;
-    // 웹은 bytes, 네이티브는 path가 있어야 유효하다.
-    if (file.path == null && file.bytes == null) return null;
-    return PickedFile(path: file.path, bytes: file.bytes, name: file.name);
+    // 웹은 PlatformFile.path 게터에 접근만 해도 예외를 던진다 — bytes만 쓴다.
+    if (kIsWeb) {
+      if (file.bytes == null) return null;
+      return PickedFile(bytes: file.bytes, name: file.name);
+    }
+    if (file.path == null) return null;
+    return PickedFile(path: file.path, name: file.name);
   }
 }
