@@ -70,7 +70,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (kind == null || !mounted) return;
 
-    final picked = await Services.instance.filePicker.pick(kind);
+    final PickedFile? picked;
+    try {
+      picked = await Services.instance.filePicker.pick(kind);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('파일을 여는 중 문제가 생겼어요. 다시 시도해 주세요.\n$e')),
+        );
+      }
+      return;
+    }
     if (picked == null || !mounted) return;
 
     await _go(kind == PickKind.audio
