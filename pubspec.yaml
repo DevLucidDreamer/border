@@ -35,6 +35,31 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # State management
+  provider: ^6.1.2
+
+  # Local-first storage (기획서: 전면 로컬 저장, 백엔드 서버 없음)
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.4
+
+  # Audio recording (녹음 시작) & playback (오디오 요약 재생)
+  record: ^6.2.1
+  audioplayers: ^6.1.0
+
+  # External AI / STT API calls
+  http: ^1.2.2
+
+  # ID generation
+  uuid: ^4.5.1
+
+  # File upload (음성 파일 / PDF 업로드) & PDF 텍스트 추출
+  file_picker: ^8.1.4
+  syncfusion_flutter_pdf: ^27.1.48
+
+  # .env 파일에서 API 키 로드
+  flutter_dotenv: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -56,6 +81,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # API 키를 담은 .env 파일을 앱에 포함
+  assets:
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:
