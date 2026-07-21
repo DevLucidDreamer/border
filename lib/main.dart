@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app.dart';
+import 'core/app_clock.dart';
 import 'data/local_store.dart';
 
 Future<void> main() async {
@@ -16,5 +17,6 @@ Future<void> main() async {
 
   // 로컬 우선 저장소 초기화 (백엔드 서버 없음)
   await LocalStore.init();
+  AppClock.load(); // 저장된 데모 날짜 오프셋 복원
   runApp(const BorderApp());
 }

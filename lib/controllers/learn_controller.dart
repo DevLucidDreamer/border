@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../core/app_clock.dart';
 import '../data/review_repository.dart';
 import '../data/unit_repository.dart';
 import '../models/quiz.dart';
@@ -81,7 +82,7 @@ class LearnController extends ChangeNotifier {
   Future<void> completeLearn({DateTime? now}) async {
     final step = current;
     if (step != null && step.kind == StepKind.learn && !step.unit.learned) {
-      final at = now ?? DateTime.now();
+      final at = now ?? AppClock.now();
       await unitRepo.save(step.unit.copyWith(learned: true, learnedDate: at));
       await reviewRepo.save(engine.onLearned(step.unit.id, now: at));
     }

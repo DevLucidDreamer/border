@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/app_clock.dart';
 import '../core/service_locator.dart';
 import '../data/local_store.dart';
 import '../services/files/file_picker_service.dart';
@@ -115,6 +116,97 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// 데모 모드: 시연 중 날짜를 앞당겨 복습 주기·시간표 과목분류를 즉석에서
+  /// 확인한다. 실제 날짜 계산을 기다리지 않고 "다음 복습"까지 점프할 수 있다.
+  Future<void> _openDemoMode() async {
+    Navigator.of(context).pop(); // 서랍 닫기
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: _paper,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) {
+          final now = AppClock.now();
+          void refresh() => setSheet(() {});
+
+          // 예정된 가장 이른 복습일로 점프.
+          void jumpToNextReview() {
+            final pending = Services.instance.reviewRepository
+                .all()
+                .where((r) => r.isPending)
+                .toList();
+            if (pending.isEmpty) {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('예정된 복습이 없어요.')));
+              return;
+            }
+            final next = pending
+                .map((r) => r.dueDate)
+                .reduce((a, b) => a.isBefore(b) ? a : b);
+            AppClock.jumpTo(next);
+            refresh();
+          }
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('데모 모드',
+                      style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                  const SizedBox(height: 12),
+                  Text('지금 앱 날짜',
+                      style: const TextStyle(fontSize: 14, color: _muted)),
+                  const SizedBox(height: 4),
+                  Text(_fmtDate(now),
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: _ink)),
+                  if (AppClock.isShifted)
+                    Text('실제 시간보다 ${AppClock.offset.inDays}일 빠름',
+                        style: const TextStyle(fontSize: 13, color: _disc)),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _demoChip('+1일',
+                          () { AppClock.advance(const Duration(days: 1)); refresh(); }),
+                      _demoChip('+7일',
+                          () { AppClock.advance(const Duration(days: 7)); refresh(); }),
+                      _demoChip('다음 복습으로', jumpToNextReview),
+                      _demoChip('실제 시간으로',
+                          () { AppClock.reset(); refresh(); }),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    if (mounted) setState(() {}); // 남은 학습 개수 갱신
+  }
+
+  Widget _demoChip(String label, VoidCallback onTap) => ActionChip(
+        label: Text(label, style: const TextStyle(fontSize: 16)),
+        backgroundColor: const Color(0xFFEFEDE5),
+        onPressed: onTap,
+      );
+
+  static String _fmtDate(DateTime d) {
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    return '${d.year}년 ${d.month}월 ${d.day}일  $hh:$mm';
+  }
+
   Widget _buildDrawer() {
     return Drawer(
       backgroundColor: _paper,
@@ -140,6 +232,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(fontSize: 20, color: Colors.red)),
               onTap: _resetData,
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.science_outlined, color: _muted),
+              title: const Text('데모 모드', style: TextStyle(fontSize: 20)),
+              subtitle: Text(
+                AppClock.isShifted
+                    ? '${_fmtDate(AppClock.now())} (조작됨)'
+                    : '날짜를 앞당겨 복습을 시연해요',
+                style: const TextStyle(fontSize: 13),
+              ),
+              onTap: _openDemoMode,
+            ),
           ],
         ),
       ),
@@ -157,8 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // 오른쪽 가장자리에서 얼굴만 빼꼼 내미는 마스코트.
-            const Positioned(top: 159, right: -35.5, child: MascotFace()),
+            // 오른쪽 가장자리에서 얼굴만 빼꼼 내미는 마스코트(직선 면이 화면 끝에 딱 붙음).
+            const Positioned(top: 150, right: 0, child: MascotFace()),
             // 오른쪽 위 서랍(≡) 버튼.
             Positioned(
               top: 0,

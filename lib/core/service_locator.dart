@@ -7,6 +7,7 @@ import '../services/ai/claude/claude_ai_services.dart';
 import '../services/ai/claude/claude_client.dart';
 import '../services/ai/clova/clova_voice_service.dart';
 import '../services/ai/mock/mock_ai_services.dart';
+import '../services/ai/openai/openai_image_service.dart';
 import '../services/ai/openai/openai_tts_service.dart';
 import '../services/ai/pipeline_stages.dart';
 import '../services/ai/subject_classifier.dart';
@@ -43,7 +44,9 @@ class Services {
   // 녹음 · 파일 처리
   final LectureRecorder recorder = LectureRecorder();
   final LocalFileStore fileStore = LocalFileStore();
-  final PdfContentExtractor pdfExtractor = PdfContentExtractor();
+  // 스캔·이미지 PDF는 Claude 문서 블록으로 OCR 폴백(_claude 재사용).
+  late final PdfContentExtractor pdfExtractor =
+      PdfContentExtractor(claude: _claude);
   final FilePickerService filePicker = FilePickerService();
 
   // Claude 클라이언트(키 있을 때만 생성)
@@ -81,6 +84,10 @@ class Services {
         ? ClaudeUnitContentBuilder(_claude)
         : MockUnitContentBuilder(),
     tts: _buildTts(),
+    imageGenerator: AppConfig.hasOpenai
+        ? OpenAiImageService(
+            apiKey: AppConfig.openaiApiKey, model: AppConfig.imageModel)
+        : MockImageGenerator(),
   );
 
   /// TTS(쉬운글 읽어주기) 구현 선택. 우선순위: OpenAI(자연스러움) > CLOVA > Mock.

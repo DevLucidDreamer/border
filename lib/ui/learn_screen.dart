@@ -592,7 +592,7 @@ class _Done extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emoji_events, size: 96, color: Colors.amber),
+          Image.asset('assets/turtle_trophy.png', width: 160),
           const SizedBox(height: 24),
           const Text('오늘 학습을 마쳤어요!', style: TextStyle(fontSize: 26)),
           const SizedBox(height: 12),

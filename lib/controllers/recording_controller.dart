@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/app_clock.dart';
 import '../data/lecture_repository.dart';
 import '../data/timetable_repository.dart';
 import '../data/unit_repository.dart';
@@ -74,7 +75,7 @@ class RecordingController extends ChangeNotifier {
 
     await lectureRepo.saveLecture(Lecture(
       id: id,
-      createdAt: DateTime.now(),
+      createdAt: AppClock.now(),
       sourceType: SourceType.recording,
       status: LectureStatus.recording,
     ));
@@ -118,7 +119,7 @@ class RecordingController extends ChangeNotifier {
 
     await lectureRepo.saveLecture(Lecture(
       id: id,
-      createdAt: DateTime.now(),
+      createdAt: AppClock.now(),
       sourceType: SourceType.audioFile,
       status: LectureStatus.transcribing,
     ));
@@ -146,7 +147,7 @@ class RecordingController extends ChangeNotifier {
 
     await lectureRepo.saveLecture(Lecture(
       id: id,
-      createdAt: DateTime.now(),
+      createdAt: AppClock.now(),
       sourceType: SourceType.pdfFile,
       status: LectureStatus.transcribing,
     ));

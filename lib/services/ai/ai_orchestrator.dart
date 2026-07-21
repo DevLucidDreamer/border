@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../models/enums.dart';
 import '../../models/keyword_card.dart';
 import '../../models/quiz.dart';
@@ -13,11 +15,13 @@ class AiOrchestrator {
     required this.summarizer,
     required this.contentBuilder,
     required this.tts,
+    required this.imageGenerator,
   });
 
   final Summarizer summarizer;
   final UnitContentBuilder contentBuilder;
   final AudioSummarizer tts;
+  final ImageGenerator imageGenerator;
 
   Future<Unit> run({
     required String unitId,
@@ -31,19 +35,27 @@ class AiOrchestrator {
     // ① 쉬운글 정리.
     onStatus?.call(LectureStatus.summarizing);
     final easyText = await summarizer.summarize(rawTranscript);
+    debugPrint('[AI] rawTranscript len=${rawTranscript.length} '
+        'easyText len=${easyText.trim().length}');
+    // 요약이 비면(모델 빈 응답 등) 이후 문항·음성이 모두 무의미하고,
+    // 빈 글이 TTS로 넘어가면 API가 400을 낸다. 여기서 분명히 끊는다.
+    if (easyText.trim().isEmpty) {
+      throw Exception('AI가 내용을 정리하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
 
     // ② 키워드 + 2·3단계 복습 문항.
     onStatus?.call(LectureStatus.buildingContent);
     final draft = await contentBuilder.build(easyText);
 
-    // ③ 쉬운글 음성.
+    // ③ 쉬운글 음성 + ④ 키워드 삽화(동시 생성으로 대기 시간을 줄인다).
     onStatus?.call(LectureStatus.generatingMedia);
-    final audioPath = await tts.synthesize(easyText, lectureId: unitId);
-
-    final keywordCards = [
-      for (final k in draft.keywords)
-        KeywordCard(keyword: k.keyword, meaning: k.meaning),
-    ];
+    final audioFuture = tts.synthesize(easyText, lectureId: unitId);
+    final cardsFuture = Future.wait([
+      for (var i = 0; i < draft.keywords.length; i++)
+        _cardWithImage(draft.keywords[i], unitId, i),
+    ]);
+    final audioPath = await audioFuture;
+    final keywordCards = await cardsFuture;
 
     final quizzes = <Quiz>[
       for (final ox in draft.oxQuizzes)
@@ -68,5 +80,20 @@ class AiOrchestrator {
       keywordCards: keywordCards,
       quizzes: quizzes,
     );
+  }
+
+  /// 키워드 하나를 삽화와 함께 카드로 만든다. 이미지 생성이 실패해도(키 없음·
+  /// 네트워크 오류) 전체 파이프라인을 막지 않고 그림 없는 카드로 넘어간다.
+  Future<KeywordCard> _cardWithImage(
+      KeywordDraft k, String unitId, int index) async {
+    String? imagePath;
+    try {
+      imagePath = await imageGenerator.illustrate(k.keyword, k.meaning,
+          unitId: unitId, index: index);
+    } catch (_) {
+      // 삽화는 부가 요소 — 실패 시 플레이스홀더로 대체된다.
+    }
+    return KeywordCard(
+        keyword: k.keyword, meaning: k.meaning, imagePath: imagePath);
   }
 }

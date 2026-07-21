@@ -12,6 +12,7 @@ class LocalStore {
   static const String unitsBox = 'units';
   static const String reviewsBox = 'reviews';
   static const String timetableBox = 'timetable';
+  static const String settingsBox = 'settings'; // 데모 오프셋 등 앱 설정
 
   static bool _initialized = false;
 
@@ -24,11 +25,16 @@ class LocalStore {
       Hive.openBox<Map>(unitsBox),
       Hive.openBox<Map>(reviewsBox),
       Hive.openBox<Map>(timetableBox),
+      Hive.openBox(settingsBox),
     ]);
     _initialized = true;
   }
 
   static Box<Map> box(String name) => Hive.box<Map>(name);
+
+  /// 앱 설정 박스(데모 오프셋 등). 값 타입이 자유로워 제네릭 없이 연다.
+  /// 데이터 초기화([clearAll])의 대상이 아니다 — 데모 설정은 유지된다.
+  static Box settings() => Hive.box(settingsBox);
 
   /// 모든 학습 데이터를 비운다(초기화). 파일 삭제는 별도로 처리한다.
   static Future<void> clearAll() async {

@@ -68,3 +68,13 @@ class MockAudioSummarizer implements AudioSummarizer {
     return null;
   }
 }
+
+/// 이미지 생성 목: 실제 삽화 대신 null(화면은 플레이스홀더 유지).
+class MockImageGenerator implements ImageGenerator {
+  @override
+  Future<String?> illustrate(String keyword, String meaning,
+      {required String unitId, required int index}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    return null;
+  }
+}

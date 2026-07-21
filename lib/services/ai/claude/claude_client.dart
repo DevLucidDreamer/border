@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Anthropic Messages API(`POST /v1/messages`)를 감싼 얇은 클라이언트.
@@ -51,6 +52,27 @@ class ClaudeClient {
     ]);
   }
 
+  /// PDF 한 개 + 프롬프트로 문서를 읽어 전사(스캔·이미지 PDF도 vision OCR).
+  /// document 블록은 텍스트 블록보다 앞에 둔다(베타 헤더 불필요).
+  Future<String> completeDocument({
+    required String system,
+    required String userPrompt,
+    required List<int> pdfBytes,
+    int maxTokens = 8192,
+  }) {
+    return _send(maxTokens: maxTokens, system: system, content: [
+      {
+        'type': 'document',
+        'source': {
+          'type': 'base64',
+          'media_type': 'application/pdf',
+          'data': base64Encode(pdfBytes),
+        },
+      },
+      {'type': 'text', 'text': userPrompt},
+    ]);
+  }
+
   /// 실제 요청 전송 + 응답 텍스트 추출(문자열/블록 배열 content 공용).
   Future<String> _send({
     required int maxTokens,
@@ -67,6 +89,9 @@ class ClaudeClient {
       body: jsonEncode({
         'model': model,
         'max_tokens': maxTokens,
+        // Sonnet 5는 thinking 미지정 시 adaptive 사고가 켜져 max_tokens를
+        // 사고에 소진하고 답변이 비어 나온다. 정리·문항·OCR은 사고 불필요.
+        'thinking': {'type': 'disabled'},
         'system': system,
         'messages': [
           {'role': 'user', 'content': content},
@@ -86,7 +111,16 @@ class ClaudeClient {
         buffer.write(block['text'] as String);
       }
     }
-    return buffer.toString().trim();
+    final out = buffer.toString().trim();
+    if (out.isEmpty) {
+      // 빈 응답 진단: stop_reason·블록 타입을 남긴다.
+      final types = blocks
+          .map((b) => b is Map ? b['type'] : b.runtimeType)
+          .toList();
+      debugPrint('[Claude] EMPTY text. stop_reason=${body['stop_reason']} '
+          'blocks=$types usage=${body['usage']}');
+    }
+    return out;
   }
 
   void dispose() => _http.close();

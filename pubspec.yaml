@@ -71,6 +71,17 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # 앱 런처 아이콘 생성(거북이). `dart run flutter_launcher_icons`로 재생성.
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  image_path: "assets/app_icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/app_icon.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -87,6 +98,9 @@ flutter:
     - .env
     - assets/turtle.png
     - assets/turtle_face.png
+    - assets/turtle_peek.png
+    - assets/turtle_trophy.png
+    - assets/border_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

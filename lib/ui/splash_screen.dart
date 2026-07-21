@@ -20,6 +20,12 @@ class SplashScreen extends StatefulWidget {
   /// 메인화면에서 쓰는 얼굴만 잘라낸(테두리 없는) 마스코트.
   static const mascotFace = 'assets/turtle_face.png';
 
+  /// 메인화면 오른쪽 가장자리에서 빼꼼 내미는 마스코트(직선 면이 화면 끝).
+  static const mascotPeek = 'assets/turtle_peek.png';
+
+  /// BORDER 워드마크 로고(둥근 콘덴스드 서체 원본).
+  static const wordmark = 'assets/border_logo.png';
+
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -38,6 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 초기화면.png 레이아웃을 원본 에셋으로 직접 합성 → 어떤 해상도에서도 선명.
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -64,7 +71,8 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
             ),
             const SizedBox(height: 22),
-            const BorderWordmark(width: 148, height: 32),
+            const BorderWordmark(
+                width: 148, height: 32, alignment: Alignment.center),
           ],
         ),
       ),
@@ -72,48 +80,42 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-/// 메인화면 오른쪽에서 빼꼼 내미는 얼굴.
-/// 기울기·크기는 docs/메인화면.png의 머리 위치(중심 (313,226), 지름 124)에 맞췄다.
+/// 메인화면 오른쪽 가장자리에서 빼꼼 내미는 얼굴.
+/// 이미지 자체가 직선 면(=화면 끝)을 가진 빼꼼 모양이라 회전 없이 붙인다.
 class MascotFace extends StatelessWidget {
-  const MascotFace({super.key, this.width = 141});
+  const MascotFace({super.key, this.width = 105});
 
   final double width;
-
-  /// 목업의 머리 기울기(-32.6°).
-  static const _tilt = -0.569;
 
   @override
   Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: _tilt,
-      child: Image.asset(SplashScreen.mascotFace, width: width),
-    );
+    return Image.asset(SplashScreen.mascotPeek, width: width);
   }
 }
 
-/// 브랜드 워드마크. 목업의 글자 크기(180x39)에 정확히 맞춘다.
-/// 목업이 쓰는 굵은 콘덴스드 서체가 없어, 박스에 맞춰 늘리는 방식으로 재현한다.
+/// 브랜드 워드마크. 로고 이미지(둥근 콘덴스드 서체)를 그대로 쓴다.
+/// width/height 박스 안에 비율 유지로 맞춘다(왜곡 없음).
 class BorderWordmark extends StatelessWidget {
-  const BorderWordmark({super.key, this.width = 180, this.height = 39});
+  const BorderWordmark({
+    super.key,
+    this.width = 180,
+    this.height = 39,
+    this.alignment = Alignment.centerLeft,
+  });
 
   final double width;
   final double height;
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
       height: height,
-      child: const FittedBox(
-        fit: BoxFit.fill,
-        child: Text(
-          'BORDER',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            height: 1.0,
-            color: SplashScreen.brand,
-          ),
-        ),
+      child: Image.asset(
+        SplashScreen.wordmark,
+        fit: BoxFit.contain,
+        alignment: alignment,
       ),
     );
   }

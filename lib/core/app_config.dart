@@ -19,6 +19,7 @@ class AppConfig {
   static const _defineSttModel = String.fromEnvironment('STT_MODEL');
   static const _defineTtsModel = String.fromEnvironment('TTS_MODEL');
   static const _defineTtsVoice = String.fromEnvironment('TTS_VOICE');
+  static const _defineImageModel = String.fromEnvironment('IMAGE_MODEL');
   static const _defineClovaId = String.fromEnvironment('CLOVA_CLIENT_ID');
   static const _defineClovaSecret = String.fromEnvironment('CLOVA_CLIENT_SECRET');
   static const _defineClovaSpeaker = String.fromEnvironment('CLOVA_SPEAKER');
@@ -57,6 +58,8 @@ class AppConfig {
       _pick(_defineTtsModel, 'TTS_MODEL', fallback: 'gpt-4o-mini-tts');
   static String get ttsVoice =>
       _pick(_defineTtsVoice, 'TTS_VOICE', fallback: 'coral');
+  static String get imageModel =>
+      _pick(_defineImageModel, 'IMAGE_MODEL', fallback: 'gpt-image-1');
   static String get clovaSpeaker =>
       _pick(_defineClovaSpeaker, 'CLOVA_SPEAKER', fallback: 'nara');
 

@@ -36,6 +36,9 @@ class OpenAiTtsService implements AudioSummarizer {
   @override
   Future<String?> synthesize(String easySummary,
       {required String lectureId}) async {
+    // 빈 입력이면 API가 400을 내므로 오디오만 건너뛴다(음성은 부가 요소).
+    if (easySummary.trim().isEmpty) return null;
+
     final text = easySummary.length > _maxChars
         ? easySummary.substring(0, _maxChars)
         : easySummary;

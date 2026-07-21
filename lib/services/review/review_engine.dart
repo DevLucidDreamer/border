@@ -1,3 +1,4 @@
+import '../../core/app_clock.dart';
 import '../../models/review_schedule.dart';
 import '../../models/unit.dart';
 
@@ -16,7 +17,7 @@ class ReviewEngine {
 
   /// 학습을 마친 단원을 1단계 복습으로 등록한다.
   ReviewSchedule onLearned(String unitId, {DateTime? now}) {
-    final at = now ?? DateTime.now();
+    final at = now ?? AppClock.now();
     return ReviewSchedule(
       unitId: unitId,
       stage: 1,
@@ -26,7 +27,7 @@ class ReviewEngine {
 
   /// 오늘 복습할 항목: 마감(pending & due<=today)만, 낮은 단계 우선.
   List<ReviewSchedule> due(List<ReviewSchedule> all, {DateTime? now}) {
-    final at = now ?? DateTime.now();
+    final at = now ?? AppClock.now();
     final list = all
         .where((s) => s.isPending && !s.dueDate.isAfter(at))
         .toList()
@@ -38,7 +39,7 @@ class ReviewEngine {
   /// 정답: 마지막 단계면 완료, 아니면 다음 단계(다음날).
   /// 오답: 한 단계 후퇴(다음날). 1단계는 그대로 유지.
   ReviewSchedule apply(ReviewSchedule s, bool correct, {DateTime? now}) {
-    final at = now ?? DateTime.now();
+    final at = now ?? AppClock.now();
     if (correct) {
       if (s.stage >= maxStage) {
         return s.copyWith(status: 'completed');

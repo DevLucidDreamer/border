@@ -19,6 +19,16 @@ abstract class AudioSummarizer {
   Future<String?> synthesize(String text, {required String lectureId});
 }
 
+/// ④ 키워드를 나타내는 쉬운 삽화를 생성한다. 반환은 로컬 이미지 경로(불가 시 null).
+abstract class ImageGenerator {
+  Future<String?> illustrate(
+    String keyword,
+    String meaning, {
+    required String unitId,
+    required int index,
+  });
+}
+
 /// [UnitContentBuilder]의 산출물: 키워드 카드 + O/X + 유사문제 초안.
 class UnitContentDraft {
   final List<KeywordDraft> keywords;
